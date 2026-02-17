@@ -9,19 +9,15 @@ interface AuthState {
   isAuthenticated: boolean;
   hasProfile: boolean;
 
-  // Phone auth flow
-  phoneNumber: string;
-  countryCode: string;
-  isVerifying: boolean;
+  // Email auth flow
+  email: string;
 
   // Actions
   setUser: (user: User | null) => void;
   setSession: (session: Session | null) => void;
   setLoading: (loading: boolean) => void;
   setHasProfile: (hasProfile: boolean) => void;
-  setPhoneNumber: (phone: string) => void;
-  setCountryCode: (code: string) => void;
-  setVerifying: (verifying: boolean) => void;
+  setEmail: (email: string) => void;
   signOut: () => Promise<void>;
   reset: () => void;
 }
@@ -32,9 +28,7 @@ const initialState = {
   isLoading: true,
   isAuthenticated: false,
   hasProfile: false,
-  phoneNumber: '',
-  countryCode: '+1',
-  isVerifying: false,
+  email: '',
 };
 
 export const useAuthStore = create<AuthState>((set) => ({
@@ -57,11 +51,7 @@ export const useAuthStore = create<AuthState>((set) => ({
 
   setHasProfile: (hasProfile) => set({ hasProfile }),
 
-  setPhoneNumber: (phoneNumber) => set({ phoneNumber }),
-
-  setCountryCode: (countryCode) => set({ countryCode }),
-
-  setVerifying: (isVerifying) => set({ isVerifying }),
+  setEmail: (email) => set({ email }),
 
   signOut: async () => {
     await supabase.auth.signOut();

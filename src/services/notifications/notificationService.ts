@@ -1,18 +1,24 @@
-import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import { Platform } from 'react-native';
 import { supabase } from '../../lib/supabase';
 
-// Configure notification behavior
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
+// Only import notifications on native platforms
+const Notifications = Platform.OS !== 'web'
+  ? require('expo-notifications')
+  : null;
+
+// Configure notification behavior (only on native)
+if (Platform.OS !== 'web' && Notifications) {
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    }),
+  });
+}
 
 export type NotificationType =
   | 'new_match'
@@ -33,6 +39,11 @@ export const notificationService = {
    * Register for push notifications and get token
    */
   async registerForPushNotifications(): Promise<string | null> {
+    // Notifications not supported on web
+    if (Platform.OS === 'web' || !Notifications) {
+      return null;
+    }
+
     // Only works on physical devices
     if (!Device.isDevice) {
       console.log('Push notifications require a physical device');
@@ -78,13 +89,13 @@ export const notificationService = {
       }
 
       const { error } = await supabase
-        .from('push_tokens')
+        .from('device_tokens')
         .upsert({
-          user_id: user.id,
+          profile_id: user.id,
           token,
           platform: Platform.OS,
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'user_id,token' });
+        }, { onConflict: 'token' });
 
       if (error) {
         return { success: false, error: error.message };
@@ -107,9 +118,9 @@ export const notificationService = {
       }
 
       const { error } = await supabase
-        .from('push_tokens')
+        .from('device_tokens')
         .delete()
-        .eq('user_id', user.id)
+        .eq('profile_id', user.id)
         .eq('token', token);
 
       if (error) {
@@ -125,7 +136,10 @@ export const notificationService = {
   /**
    * Get current notification permissions status
    */
-  async getPermissionStatus(): Promise<Notifications.PermissionStatus> {
+  async getPermissionStatus(): Promise<string> {
+    if (Platform.OS === 'web' || !Notifications) {
+      return 'undetermined';
+    }
     const { status } = await Notifications.getPermissionsAsync();
     return status;
   },
@@ -135,8 +149,11 @@ export const notificationService = {
    */
   async scheduleLocalNotification(
     notification: NotificationData,
-    trigger?: Notifications.NotificationTriggerInput
+    trigger?: any
   ): Promise<string> {
+    if (Platform.OS === 'web' || !Notifications) {
+      return '';
+    }
     return Notifications.scheduleNotificationAsync({
       content: {
         title: notification.title,
@@ -152,6 +169,7 @@ export const notificationService = {
    * Cancel a scheduled notification
    */
   async cancelNotification(notificationId: string): Promise<void> {
+    if (Platform.OS === 'web' || !Notifications) return;
     await Notifications.cancelScheduledNotificationAsync(notificationId);
   },
 
@@ -159,6 +177,7 @@ export const notificationService = {
    * Cancel all scheduled notifications
    */
   async cancelAllNotifications(): Promise<void> {
+    if (Platform.OS === 'web' || !Notifications) return;
     await Notifications.cancelAllScheduledNotificationsAsync();
   },
 
@@ -166,6 +185,7 @@ export const notificationService = {
    * Get badge count
    */
   async getBadgeCount(): Promise<number> {
+    if (Platform.OS === 'web' || !Notifications) return 0;
     return Notifications.getBadgeCountAsync();
   },
 
@@ -173,6 +193,7 @@ export const notificationService = {
    * Set badge count
    */
   async setBadgeCount(count: number): Promise<void> {
+    if (Platform.OS === 'web' || !Notifications) return;
     await Notifications.setBadgeCountAsync(count);
   },
 
@@ -180,6 +201,7 @@ export const notificationService = {
    * Clear all delivered notifications
    */
   async dismissAllNotifications(): Promise<void> {
+    if (Platform.OS === 'web' || !Notifications) return;
     await Notifications.dismissAllNotificationsAsync();
   },
 

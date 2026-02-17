@@ -1,23 +1,29 @@
 import { useEffect, useRef, useCallback, useState } from 'react';
-import * as Notifications from 'expo-notifications';
-import { Subscription } from 'expo-notifications';
 import { useRouter } from 'expo-router';
-import { AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus, Platform } from 'react-native';
 import { notificationService, NotificationType } from './notificationService';
 import { useAuthStore } from '../../stores/authStore';
+
+// Only import notifications on native platforms
+const Notifications = Platform.OS !== 'web'
+  ? require('expo-notifications')
+  : null;
+
+type Subscription = { remove: () => void };
 
 export function useNotifications() {
   const router = useRouter();
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
-  const [permissionStatus, setPermissionStatus] = useState<Notifications.PermissionStatus | null>(null);
+  const [permissionStatus, setPermissionStatus] = useState<string | null>(null);
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   const notificationListener = useRef<Subscription | null>(null);
   const responseListener = useRef<Subscription | null>(null);
 
   // Handle notification received while app is foregrounded
-  const handleNotificationReceived = useCallback((notification: Notifications.Notification) => {
+  const handleNotificationReceived = useCallback((notification: any) => {
+    if (!notification?.request?.content?.data) return;
     const data = notification.request.content.data;
     console.log('Notification received:', data);
 
@@ -25,7 +31,8 @@ export function useNotifications() {
   }, []);
 
   // Handle notification tap
-  const handleNotificationResponse = useCallback((response: Notifications.NotificationResponse) => {
+  const handleNotificationResponse = useCallback((response: any) => {
+    if (!response?.notification?.request?.content?.data) return;
     const data = response.notification.request.content.data;
     const type = data.type as NotificationType;
 
@@ -95,6 +102,9 @@ export function useNotifications() {
   useEffect(() => {
     if (!isAuthenticated) return;
 
+    // Skip on web
+    if (Platform.OS === 'web' || !Notifications) return;
+
     // Setup listeners
     notificationListener.current = Notifications.addNotificationReceivedListener(
       handleNotificationReceived
@@ -143,7 +153,7 @@ export function useNotifications() {
  * Hook to request notification permissions with a prompt
  */
 export function useNotificationPermission() {
-  const [status, setStatus] = useState<Notifications.PermissionStatus | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const [isRequesting, setIsRequesting] = useState(false);
 
   const checkStatus = useCallback(async () => {

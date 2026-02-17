@@ -75,7 +75,7 @@ export function LocationStep() {
   const handleManualSave = () => {
     if (manualCity.trim()) {
       // Set city without coordinates for manual entry
-      setLocation(manualCity.trim(), 0, 0);
+      setLocation(manualCity.trim(), null, null);
       setShowManualInput(false);
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     }

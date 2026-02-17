@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState } from 'react';
 import {
   View,
   Text,
@@ -76,7 +76,7 @@ export default function OnboardingScreen() {
   const isLastStep = currentStep === totalSteps - 1;
   const StepComponent = STEP_COMPONENTS[currentStep];
 
-  const handleNext = useCallback(async () => {
+  const handleNext = async () => {
     if (!canProceed()) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
       return;
@@ -89,9 +89,9 @@ export default function OnboardingScreen() {
     } else {
       nextStep();
     }
-  }, [canProceed, isLastStep, nextStep]);
+  };
 
-  const handleBack = useCallback(() => {
+  const handleBack = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (currentStep === 0) {
       Alert.alert(
@@ -112,7 +112,7 @@ export default function OnboardingScreen() {
     } else {
       prevStep();
     }
-  }, [currentStep, prevStep, reset, router]);
+  };
 
   const handleSubmit = async () => {
     setIsSubmitting(true);

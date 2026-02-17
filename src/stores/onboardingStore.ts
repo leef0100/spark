@@ -44,7 +44,7 @@ interface OnboardingState {
   setJobTitle: (title: string) => void;
   setCompany: (company: string) => void;
   setEducation: (education: string) => void;
-  setLocation: (city: string, lat: number, lng: number) => void;
+  setLocation: (city: string, lat: number | null, lng: number | null) => void;
   setCurrentStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;

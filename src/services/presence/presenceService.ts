@@ -2,7 +2,7 @@ import { supabase } from '../../lib/supabase';
 import { RealtimeChannel } from '@supabase/supabase-js';
 
 export interface PresenceState {
-  odguser_id: string;
+  user_id: string;
   online_at: string;
   status: 'online' | 'away' | 'offline';
 }

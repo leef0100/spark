@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, Platform } from 'react-native';
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -7,11 +7,15 @@ import Animated, {
   withSequence,
   runOnJS,
 } from 'react-native-reanimated';
-import NetInfo, { NetInfoState } from '@react-native-community/netinfo';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { spacing } from '../../theme/spacing';
+
+// Only import NetInfo on native platforms
+const NetInfo = Platform.OS !== 'web'
+  ? require('@react-native-community/netinfo').default
+  : null;
 
 export function NetworkStatus() {
   const insets = useSafeAreaInsets();
@@ -20,7 +24,10 @@ export function NetworkStatus() {
   const translateY = useSharedValue(-60);
 
   useEffect(() => {
-    const unsubscribe = NetInfo.addEventListener((state: NetInfoState) => {
+    // Skip on web
+    if (Platform.OS === 'web' || !NetInfo) return;
+
+    const unsubscribe = NetInfo.addEventListener((state: any) => {
       const connected = state.isConnected ?? true;
       setIsConnected(connected);
 

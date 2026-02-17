@@ -36,12 +36,12 @@ export default function WelcomeScreen() {
 
   const handleSignUp = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    router.push('/(auth)/phone');
+    router.push('/(auth)/login');
   };
 
   const handleLogin = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    router.push('/(auth)/phone');
+    router.push('/(auth)/login');
   };
 
   return (

@@ -14,6 +14,7 @@ export type LookingForType = 'men' | 'women' | 'everyone';
 export type InteractionType = 'like' | 'comment' | 'pass';
 export type LikedContentType = 'photo' | 'prompt';
 export type ExpiredReasonType = 'timeout' | 'unmatched';
+export type PresenceStatusType = 'online' | 'away' | 'offline';
 
 export interface Database {
   public: {
@@ -234,6 +235,22 @@ export interface Database {
           token?: string;
           platform?: 'ios' | 'android' | 'web';
           updated_at?: string;
+        };
+      };
+      user_presence: {
+        Row: {
+          user_id: string;
+          status: PresenceStatusType;
+          last_seen: string;
+        };
+        Insert: {
+          user_id: string;
+          status?: PresenceStatusType;
+          last_seen?: string;
+        };
+        Update: {
+          status?: PresenceStatusType;
+          last_seen?: string;
         };
       };
     };

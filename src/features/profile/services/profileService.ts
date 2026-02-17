@@ -323,11 +323,11 @@ export const profileService = {
       }
 
       const { data, error } = await supabase
-        .from('blocks')
+        .from('blocked_users')
         .select(`
           blocked_id,
           created_at,
-          blocked_profile:profiles!blocks_blocked_id_fkey(
+          blocked_profile:profiles!blocked_users_blocked_id_fkey(
             first_name,
             profile_photos(storage_path)
           )
@@ -377,7 +377,7 @@ export const profileService = {
       }
 
       const { error } = await supabase
-        .from('blocks')
+        .from('blocked_users')
         .delete()
         .eq('blocker_id', user.id)
         .eq('blocked_id', userId);
@@ -403,9 +403,7 @@ export const profileService = {
       }
 
       // Call the delete account RPC which handles cascade deletion
-      const { error: rpcError } = await supabase.rpc('delete_user_account', {
-        user_id_param: user.id,
-      });
+      const { error: rpcError } = await supabase.rpc('delete_account');
 
       if (rpcError) {
         return { success: false, error: rpcError.message };

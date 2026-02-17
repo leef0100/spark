@@ -1,46 +1,64 @@
 import { supabase } from '../../../lib/supabase';
 
 export interface SignUpData {
-  phone: string;
+  email: string;
+  password: string;
 }
 
-export interface VerifyOTPData {
-  phone: string;
-  token: string;
+export interface SignInData {
+  email: string;
+  password: string;
 }
 
 export const authService = {
   /**
-   * Send OTP to phone number
+   * Sign up with email and password
    */
-  async sendOTP(phone: string): Promise<{ success: boolean; error?: string }> {
+  async signUp(
+    email: string,
+    password: string
+  ): Promise<{ success: boolean; isNewUser: boolean; error?: string }> {
     try {
-      const { error } = await supabase.auth.signInWithOtp({
-        phone,
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
       });
 
       if (error) {
-        return { success: false, error: error.message };
+        return { success: false, isNewUser: false, error: error.message };
       }
 
-      return { success: true };
+      // Check if user already has a profile
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .single();
+
+        return {
+          success: true,
+          isNewUser: !profile,
+        };
+      }
+
+      return { success: true, isNewUser: true };
     } catch (error) {
-      return { success: false, error: 'Failed to send verification code' };
+      return { success: false, isNewUser: false, error: 'Sign up failed' };
     }
   },
 
   /**
-   * Verify OTP code
+   * Sign in with email and password
    */
-  async verifyOTP(
-    phone: string,
-    token: string
+  async signIn(
+    email: string,
+    password: string
   ): Promise<{ success: boolean; isNewUser: boolean; error?: string }> {
     try {
-      const { data, error } = await supabase.auth.verifyOtp({
-        phone,
-        token,
-        type: 'sms',
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
       });
 
       if (error) {
@@ -48,18 +66,39 @@ export const authService = {
       }
 
       // Check if user has a profile
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', data.user?.id)
-        .single();
+      if (data.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', data.user.id)
+          .single();
 
-      return {
-        success: true,
-        isNewUser: !profile,
-      };
+        return {
+          success: true,
+          isNewUser: !profile,
+        };
+      }
+
+      return { success: true, isNewUser: false };
     } catch (error) {
-      return { success: false, isNewUser: false, error: 'Verification failed' };
+      return { success: false, isNewUser: false, error: 'Sign in failed' };
+    }
+  },
+
+  /**
+   * Reset password
+   */
+  async resetPassword(email: string): Promise<{ success: boolean; error?: string }> {
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email);
+
+      if (error) {
+        return { success: false, error: error.message };
+      }
+
+      return { success: true };
+    } catch (error) {
+      return { success: false, error: 'Failed to send reset email' };
     }
   },
 
